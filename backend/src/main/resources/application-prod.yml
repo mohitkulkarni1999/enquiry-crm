@@ -5,18 +5,21 @@ server:
 
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/enquirycrm}
-    driverClassName: com.mysql.cj.jdbc.Driver
-    username: ${MYSQLUSER:root}
-    password: ${MYSQLPASSWORD:root}
+    url: ${DATABASE_URL:jdbc:h2:mem:testdb}
+    driverClassName: ${DB_DRIVER:org.h2.Driver}
+    username: ${MYSQLUSER:sa}
+    password: ${MYSQLPASSWORD:}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: false
     properties:
       hibernate:
         format_sql: false
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: ${DB_DIALECT:org.hibernate.dialect.H2Dialect}
+  h2:
+    console:
+      enabled: false
   jackson:
     serialization:
       write-dates-as-timestamps: false
