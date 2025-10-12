@@ -5,10 +5,11 @@ server:
 
 spring:
   datasource:
-    url: ${DATABASE_URL}
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/enquiry_crm}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${MYSQLUSER}
-    password: ${MYSQLPASSWORD}
+    username: ${MYSQLUSER:root}
+    password: ${MYSQLPASSWORD:password}
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -17,9 +18,11 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+
   jackson:
     serialization:
       write-dates-as-timestamps: false
+
   flyway:
     enabled: false
 
