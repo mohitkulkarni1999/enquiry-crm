@@ -10,12 +10,12 @@ RUN apt-get update && \
 # Set working directory
 WORKDIR /app
 
-# Copy pom.xml and download dependencies
-COPY pom.xml ./
+# Copy backend pom.xml and download dependencies
+COPY backend/pom.xml ./
 RUN mvn dependency:go-offline -B
 
-# Copy source code and build
-COPY src ./src
+# Copy backend source code and build
+COPY backend/src ./src
 RUN mvn clean package -DskipTests
 
 # Expose port
