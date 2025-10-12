@@ -2,13 +2,14 @@ server:
   port: ${PORT:8080}
   servlet:
     context-path: /api/v1
+# Force deployment trigger
 
 spring:
   datasource:
-    url: ${DATABASE_URL}
+    url: ${DATABASE_URL:jdbc:mysql://mysql.railway.internal:3306/railway}
     driverClassName: com.mysql.cj.jdbc.Driver
-    username: ${MYSQLUSER}
-    password: ${MYSQLPASSWORD}
+    username: ${MYSQLUSER:root}
+    password: ${MYSQLPASSWORD:password}
   jpa:
     hibernate:
       ddl-auto: update
