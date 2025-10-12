@@ -5,21 +5,18 @@ server:
 
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:h2:mem:testdb}
-    driverClassName: ${DB_DRIVER:org.h2.Driver}
-    username: ${MYSQLUSER:sa}
-    password: ${MYSQLPASSWORD:}
+    url: ${DATABASE_URL}
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: ${MYSQLUSER}
+    password: ${MYSQLPASSWORD}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
         format_sql: false
-        dialect: ${DB_DIALECT:org.hibernate.dialect.H2Dialect}
-  h2:
-    console:
-      enabled: false
+        dialect: org.hibernate.dialect.MySQL8Dialect
   jackson:
     serialization:
       write-dates-as-timestamps: false
