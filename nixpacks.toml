@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs", "maven", "openjdk17"]
+
+[phases.build]
+cmds = [
+  "cd backend && mvn clean package -DskipTests",
+  "cd frontend && npm install && npm run build"
+]
+
+[phases.start]
+cmd = "cd backend && java -Dserver.port=$PORT -Dspring.profiles.active=prod -jar target/*.jar"

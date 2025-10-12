@@ -1,0 +1,36 @@
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /api/v1
+
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/enquirycrm}
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: ${MYSQLUSER:root}
+    password: ${MYSQLPASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  flyway:
+    enabled: false
+
+cors:
+  allowed-origins: ${FRONTEND_URL:http://localhost:5173,https://*.railway.app}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+
+logging:
+  level:
+    com.enquirycrm: INFO
+    org.springframework.security: INFO

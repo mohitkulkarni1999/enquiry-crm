@@ -1,0 +1,24 @@
+package com.enquirycrm.domain;
+
+public enum EnquiryStatus {
+    NEW,
+    ASSIGNED,
+    IN_PROGRESS,
+    INTERESTED,
+    NOT_INTERESTED,
+    UNQUALIFIED,
+    FOLLOW_UP_SCHEDULED,
+    SITE_VISIT_SCHEDULED,
+    NEGOTIATION,
+    FINAL_BOOKING,
+    CLOSED_WON,
+    CLOSED_LOST,
+    FOLLOW_UP,
+    INVENTORY_SALE,
+    INVENTORY_HOLD,
+    TAKEN_RECEIVED,
+    TOKEN,
+    BOOKED
+}
+
+
