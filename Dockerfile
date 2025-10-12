@@ -1,5 +1,5 @@
-# Use OpenJDK with Maven
-FROM openjdk:17-jdk-slim
+# Use Eclipse Temurin (more reliable than OpenJDK)
+FROM eclipse-temurin:17-jdk
 
 # Install Maven
 RUN apt-get update && \
@@ -10,12 +10,10 @@ RUN apt-get update && \
 # Set working directory
 WORKDIR /app
 
-# Copy backend pom.xml and download dependencies
-COPY backend/pom.xml ./
-RUN mvn dependency:go-offline -B
+# Copy backend files
+COPY backend/ ./
 
-# Copy backend source code and build
-COPY backend/src ./src
+# Build the application
 RUN mvn clean package -DskipTests
 
 # Expose port

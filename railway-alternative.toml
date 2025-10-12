@@ -1,0 +1,9 @@
+# Alternative Railway config - if Dockerfile fails, try this
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "cd backend && mvn spring-boot:run -Dspring-boot.run.profiles=prod"
+healthcheckPath = "/api/v1/actuator/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
