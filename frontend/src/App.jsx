@@ -10,6 +10,7 @@ import CRMDashboard from './components/pages/CRMDashboard';
 import SuperAdminDashboard from './components/pages/SuperAdminDashboard';
 import Login from './components/pages/Login';
 import AdminSignup from './components/pages/AdminSignup';
+import FormBuilder from './components/pages/FormBuilder';
 import Navigation from './components/layout/Navigation';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppProvider } from './contexts/AppContext';
@@ -110,6 +111,11 @@ function App() {
             <Route path="/analytics" element={
               <Protected roles={['CRM_ADMIN']}>
                 <Analytics />
+              </Protected>
+            } />
+            <Route path="/form-builder" element={
+              <Protected roles={['CRM_ADMIN']}>
+                <FormBuilder />
               </Protected>
             } />
             <Route path="/sales-team-performance" element={
