@@ -56,6 +56,7 @@ const Navigation = ({ collapsed = false, onToggle }) => {
           icon: NavigationIcons.settings,
           items: [
             { path: '/super-admin', label: 'Super Admin Dashboard', icon: NavigationIcons.dashboard },
+            { path: '/form-builder', label: 'Edit Enquiry Form', icon: ActionIcons.edit },
             { path: '/analytics', label: 'System Analytics', icon: BusinessIcons.trending },
             { path: '/crm-dashboard', label: 'CRM Overview', icon: NavigationIcons.crm },
             { path: '/sales', label: 'Sales Management', icon: BusinessIcons.users },
@@ -71,6 +72,7 @@ const Navigation = ({ collapsed = false, onToggle }) => {
           icon: NavigationIcons.crm,
           items: [
             { path: '/crm-dashboard', label: 'CRM Dashboard', icon: NavigationIcons.dashboard },
+            { path: '/form-builder', label: 'Edit Enquiry Form', icon: ActionIcons.edit },
             { path: '/sales', label: 'Sales Management', icon: BusinessIcons.users, badge: unassignedCount > 0 ? unassignedCount : null },
             { path: '/sales-team-performance', label: 'Team Performance', icon: BusinessIcons.award },
             { path: '/analytics', label: 'Analytics & Reports', icon: BusinessIcons.trending },

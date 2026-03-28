@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { StatusBadge, PriorityBadge } from '../ui/Badge';
@@ -11,6 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authAPI } from '../../utils/api';
 
 const SuperAdminDashboard = () => {
+  const navigate = useNavigate();
   const { enquiries = [], salesPersons = [], users = [], loading, loadEnquiries, loadSalesPersons, loadUsers } = useAppContext();
   const { user } = useAuth();
   const [systemMetrics, setSystemMetrics] = useState({
@@ -61,14 +63,14 @@ const SuperAdminDashboard = () => {
     const activeUsers = salesPersons.filter(sp => sp.isAvailable || sp.available).length;
     
     setSystemMetrics({
-      totalUsers: salesPersons.length,
+      totalUsers: users.length,
       activeUsers,
       totalEnquiries,
       conversionRate,
-      revenue: closedWon * 50000, // Assuming average deal value
-      systemHealth: 'Excellent'
+      revenue: 0, 
+      systemHealth: 'Active'
     });
-  }, [enquiries, salesPersons]);
+  }, [enquiries, salesPersons, users]);
 
   const getStatusDistribution = () => {
     const statusCounts = {};
@@ -346,6 +348,33 @@ const SuperAdminDashboard = () => {
           <p className="text-gray-600 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto">
             Complete system overview and administrative controls for your CRM platform
           </p>
+        </div>
+
+        {/* Form Builder Quick Access Card */}
+        <div className="mb-8">
+          <Card className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-8 shadow-xl border-0 overflow-hidden relative">
+            <div className="absolute right-0 top-0 p-8 opacity-10 transform translate-x-12 -translate-y-12">
+               <NavigationIcons.settings size={300} className="text-white" />
+            </div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="text-white text-center md:text-left">
+                <h2 className="text-3xl font-extrabold mb-2 flex items-center justify-center md:justify-start gap-3">
+                  <ActionIcons.edit size={32} />
+                  Enquiry Form Control
+                </h2>
+                <p className="text-blue-100 text-lg opacity-90 max-w-xl">
+                  Take full control of the public enquiry form. Add custom fields, change dropdown options for sources or property types, and make fields required or optional in real-time.
+                </p>
+              </div>
+              <Button 
+                onClick={() => navigate('/form-builder')}
+                className="bg-white text-blue-700 hover:bg-blue-50 py-4 px-8 rounded-2xl font-bold text-lg shadow-2xl transform active:scale-95 transition-all"
+                icon={<ActionIcons.edit size={20} />}
+              >
+                Launch Form Builder
+              </Button>
+            </div>
+          </Card>
         </div>
 
         {/* Key Metrics */}
