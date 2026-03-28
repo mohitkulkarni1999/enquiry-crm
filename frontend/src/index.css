@@ -128,3 +128,50 @@
 .table-professional tbody tr:hover {
   @apply bg-gray-50;
 }
+
+/* ===== RESPONSIVE UTILITIES ===== */
+
+/* Prevent horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Safe area insets for notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .min-h-screen {
+    min-height: calc(100vh - env(safe-area-inset-bottom));
+  }
+}
+
+/* Mobile-friendly touch targets */
+@media (max-width: 767px) {
+  button, a, select, input[type="date"] {
+    min-height: 40px;
+  }
+
+  /* Better mobile table readability */
+  table {
+    font-size: 0.8125rem;
+  }
+
+  /* Compact card padding on small screens */
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* Smooth scrolling for overflowing tables */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Modal backdrop for mobile */
+@media (max-width: 767px) {
+  .fixed.inset-0 {
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+}

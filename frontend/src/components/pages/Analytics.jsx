@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import { StatusBadge, PriorityBadge } from '../ui/Badge';
-import { BusinessIcons, NavigationIcons, ActionIcons, ChartIcons } from '../ui/Icons';
-import { showToast } from '../ui/Toast';
+import { StatusBadge } from '../ui/Badge';
+import { BusinessIcons, ActionIcons, ChartIcons } from '../ui/Icons';
 import Loading from '../ui/Loading';
 import StatisticsCard from '../common/StatisticsCard';
 import { useAppContext } from '../../contexts/AppContext';
@@ -18,7 +17,7 @@ const Analytics = () => {
     avgDealSize: 0,
     conversionFunnel: {},
     performanceMetrics: {},
-    trends: {}
+    teamPerformance: {}
   });
 
   useEffect(() => {
@@ -30,16 +29,14 @@ const Analytics = () => {
     const booked = enquiries.filter(e => e.status === 'BOOKED').length;
     const totalRevenue = (closedWon + booked) * 50000; // ₹50K average deal value
     const avgDealSize = (closedWon + booked) > 0 ? totalRevenue / (closedWon + booked) : 50000;
-    const conversionRate = totalEnquiries > 0 ? Math.round(((closedWon + booked) / totalEnquiries) * 100) : 0;
 
-    // Conversion funnel - proper calculation
+    // Conversion funnel
     const qualified = enquiries.filter(e => 
       !['UNQUALIFIED', 'CLOSED_LOST'].includes(e.status)
     ).length;
     const opportunities = enquiries.filter(e => 
       ['INTERESTED', 'IN_PROGRESS', 'FOLLOW_UP_SCHEDULED', 'SITE_VISIT_SCHEDULED'].includes(e.status)
     ).length;
-    const activePipeline = opportunities * 50000; // Potential revenue
 
     const conversionFunnel = {
       leads: totalEnquiries,
@@ -55,7 +52,7 @@ const Analytics = () => {
       statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
 
-    // Team performance - improved calculation
+    // Team performance
     const teamPerformance = {};
     enquiries.forEach(e => {
       const assignedTo = e.assignedTo?.name || e.assignedTo?.email || e.assignedTo || 'Unassigned';
@@ -64,7 +61,6 @@ const Analytics = () => {
           total: 0, 
           closed: 0, 
           revenue: 0,
-          conversionRate: 0,
           name: assignedTo
         };
       }
@@ -75,7 +71,7 @@ const Analytics = () => {
       }
     });
 
-    // Calculate conversion rates for team members
+    // Calculate conversion rates
     Object.keys(teamPerformance).forEach(member => {
       const perf = teamPerformance[member];
       perf.conversionRate = perf.total > 0 ? Math.round((perf.closed / perf.total) * 100) : 0;
@@ -96,15 +92,12 @@ const Analytics = () => {
     }
     
     return Object.entries(analyticsData.teamPerformance)
-      .map(([id, stats]) => {
-        const salesperson = salesPersons.find(sp => sp.id === parseInt(id));
-        return {
-          id,
-          name: salesperson?.name || stats.name || 'Unknown',
-          ...stats,
-          rate: stats.total > 0 ? Math.round((stats.closed / stats.total) * 100) : 0
-        };
-      })
+      .map(([id, stats]) => ({
+        id,
+        name: stats.name || 'Unknown',
+        ...stats,
+        rate: stats.total > 0 ? Math.round((stats.closed / stats.total) * 100) : 0
+      }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
   };
@@ -115,10 +108,8 @@ const Analytics = () => {
   };
 
   const handleSalesPersonClick = (salesPersonName) => {
-    // Navigate to the sales person details page
     navigate(`/sales-person-details/${encodeURIComponent(salesPersonName)}`);
   };
-
 
   if (loading) {
     return (
@@ -171,6 +162,137 @@ const Analytics = () => {
           </div>
         </div>
 
+        {/* Key Performance Indicators */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatisticsCard
+            title="Total Enquiries"
+            value={enquiries.length.toString()}
+            icon={<BusinessIcons.briefcase size={24} />}
+            color="blue"
+            trend="neutral"
+            trendValue="All time"
+            subtitle="Total Leads in System"
+          />
+          <StatisticsCard
+            title="Conversion Rate"
+            value={getConversionRate(analyticsData.conversionFunnel.leads, analyticsData.conversionFunnel.closedWon)}
+            icon={<BusinessIcons.target size={24} />}
+            color="purple"
+            trend="up"
+            trendValue="Overall Success"
+            subtitle="Lead to Customer Rate"
+          />
+          <StatisticsCard
+            title="Opportunities Pipeline"
+            value={analyticsData.conversionFunnel.opportunities.toString()}
+            icon={<BusinessIcons.activity size={24} />}
+            color="indigo"
+            trend="up"
+            trendValue="Active Work"
+            subtitle="Interested & In Progress"
+          />
+          <StatisticsCard
+            title="Total Bookings"
+            value={analyticsData.conversionFunnel.closedWon.toString()}
+            icon={<BusinessIcons.award size={24} />}
+            color="green"
+            trend="up"
+            trendValue="Closed Won"
+            subtitle="Successfully Completed"
+          />
+        </div>
+
+        {/* Conversion Funnel */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card variant="gradient" shadow="lg">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <ChartIcons.bar className="text-blue-600" size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Conversion Funnel</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-gray-700">Leads</span>
+                  <span className="font-bold text-gray-900">{analyticsData.conversionFunnel.leads}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-blue-500 h-3 rounded-full" style={{width: '100%'}}></div>
+                </div>
+              </div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-gray-700">Qualified</span>
+                  <span className="font-bold text-gray-900">{analyticsData.conversionFunnel.qualified}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-green-500 h-3 rounded-full" style={{
+                    width: `${(analyticsData.conversionFunnel.qualified / analyticsData.conversionFunnel.leads) * 100}%`
+                  }}></div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  {getConversionRate(analyticsData.conversionFunnel.leads, analyticsData.conversionFunnel.qualified)} conversion
+                </span>
+              </div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-gray-700">Opportunities</span>
+                  <span className="font-bold text-gray-900">{analyticsData.conversionFunnel.opportunities}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-yellow-500 h-3 rounded-full" style={{
+                    width: `${(analyticsData.conversionFunnel.opportunities / analyticsData.conversionFunnel.leads) * 100}%`
+                  }}></div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  {getConversionRate(analyticsData.conversionFunnel.qualified, analyticsData.conversionFunnel.opportunities)} from qualified
+                </span>
+              </div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-gray-700">Closed Won</span>
+                  <span className="font-bold text-gray-900">{analyticsData.conversionFunnel.closedWon}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-purple-500 h-3 rounded-full" style={{
+                    width: `${(analyticsData.conversionFunnel.closedWon / analyticsData.conversionFunnel.leads) * 100}%`
+                  }}></div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  {getConversionRate(analyticsData.conversionFunnel.opportunities, analyticsData.conversionFunnel.closedWon)} close rate
+                </span>
+              </div>
+            </div>
+          </Card>
+
+          <Card variant="gradient" shadow="lg">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <ChartIcons.pie className="text-green-600" size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Status Distribution</h3>
+            </div>
+            <div className="space-y-3">
+              {Object.entries(analyticsData.performanceMetrics).slice(0, 6).map(([status, count]) => (
+                <div key={status} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <StatusBadge status={status} size="sm" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-gray-900">{count}</span>
+                    <div className="text-xs text-gray-500">
+                      {Math.round((count / enquiries.length) * 100)}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
 
         {/* Top Performers */}
         <Card variant="gradient" shadow="lg">
@@ -179,7 +301,7 @@ const Analytics = () => {
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <BusinessIcons.award className="text-yellow-600" size={20} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Top Revenue Generators</h3>
+              <h3 className="text-xl font-bold text-gray-900">Top Performers</h3>
             </div>
             <Button variant="outline" size="sm" icon={<ActionIcons.download size={16} />}>
               Export Report
@@ -194,7 +316,6 @@ const Analytics = () => {
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">Total Enquiries</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">Closed Deals</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">Conversion Rate</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Revenue</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,16 +345,12 @@ const Analytics = () => {
                         {performer.rate}%
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="font-bold text-purple-600">₹{(performer.revenue / 100000).toFixed(1)}L</span>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </Card>
-
       </div>
     </div>
   );

@@ -58,7 +58,7 @@ const AppLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex">
       <Navigation collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-      <main className={`flex-1 px-4 py-6 md:p-8 transition-all duration-300 ${sidebarCollapsed ? 'ml-0 md:ml-16' : 'ml-0 md:ml-72'
+      <main className={`flex-1 min-w-0 pt-16 px-3 pb-6 md:pt-6 md:px-6 lg:px-8 md:py-8 transition-all duration-300 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-72'
         }`}>
         {children}
       </main>

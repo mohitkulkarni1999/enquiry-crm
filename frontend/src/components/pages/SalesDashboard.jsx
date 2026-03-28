@@ -652,15 +652,7 @@ const SalesDashboard = () => {
               </div>
             </div>
             <div className="overflow-x-auto">
-            <table className="w-full table-fixed">
-              <colgroup>
-                <col className="w-1/4" />
-                <col className="w-1/6" />
-                <col className="w-1/6" />
-                <col className="w-1/8" />
-                <col className="w-1/8" />
-                <col className="w-1/6" />
-              </colgroup>
+            <table className="w-full min-w-[700px]">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>

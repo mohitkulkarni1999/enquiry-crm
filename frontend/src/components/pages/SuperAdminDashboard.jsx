@@ -615,18 +615,18 @@ const SuperAdminDashboard = () => {
 
           <div className="space-y-4">
             {users.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+              <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div className="flex items-center space-x-4 min-w-0">
+                  <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                     {user.username?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">{user.username}</p>
-                    <p className="text-sm text-gray-600">{user.role?.replace('_', ' ')} • {user.email || 'No email'}</p>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{user.username}</p>
+                    <p className="text-sm text-gray-600 truncate">{user.role?.replace('_', ' ')} • {user.email || 'No email'}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap pl-14 sm:pl-0">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                     user.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
                     user.role === 'CRM_ADMIN' ? 'bg-blue-100 text-blue-800' :
                     'bg-green-100 text-green-800'
@@ -650,7 +650,7 @@ const SuperAdminDashboard = () => {
                       disabled={isDeletingUser}
                       icon={isDeletingUser ? <ActionIcons.loading size={14} className="animate-spin" /> : <ActionIcons.delete size={14} />}
                     >
-                      {isDeletingUser ? 'Deleting...' : 'Delete'}
+                      {isDeletingUser ? '...' : 'Delete'}
                     </Button>
                   </div>
                 </div>
@@ -674,21 +674,21 @@ const SuperAdminDashboard = () => {
           </div>
           <div className="space-y-3">
             {topPerformers.length > 0 ? topPerformers.map((performer, index) => (
-              <div key={performer.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-l-4 border-blue-500">
+              <div key={performer.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-l-4 border-blue-500">
                 <div className="flex items-center space-x-4">
-                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full text-white font-bold text-sm">
+                  <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full text-white font-bold text-sm">
                     {index + 1}
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-lg">{performer.name}</p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <span>📊 {performer.total} Total Enquiries</span>
-                      <span>✅ {performer.closed} Closed Deals</span>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 text-lg truncate">{performer.name}</p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
+                      <span>📊 {performer.total} Enquiries</span>
+                      <span>✅ {performer.closed} Closed</span>
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center space-x-2">
+                <div className="text-right pl-14 sm:pl-0">
+                  <div className="flex items-center justify-end space-x-2">
                     <div className="text-right">
                       <p className="text-2xl font-bold text-green-600">{performer.rate}%</p>
                       <p className="text-xs text-gray-500">Conversion Rate</p>
