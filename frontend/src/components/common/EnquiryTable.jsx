@@ -242,7 +242,6 @@ const EnquiryTable = ({ enquiries = [] }) => {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interest</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow Up Date</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking Status</th>
@@ -268,21 +267,11 @@ const EnquiryTable = ({ enquiries = [] }) => {
                   {formatBudgetRange(enquiry.budgetRange || enquiry.budget)}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
-                  <Badge variant={getStatusVariant(enquiry.status)}>
-                    {(enquiry.status || '').replace(/_/g, ' ').toUpperCase()}
-                  </Badge>
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  {(enquiry.interestLevel || enquiry.interest) && (
-                    <Badge variant={getInterestVariant(enquiry.interestLevel)}>
+                  {(enquiry.interestLevel || enquiry.interest) ? (
+                    <Badge variant={getInterestVariant(enquiry.interestLevel || enquiry.interest)}>
                       {(enquiry.interestLevel || enquiry.interest).toUpperCase()}
                     </Badge>
-                  )}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <Badge variant={getStatusVariant(enquiry.status)}>
-                    {(enquiry.status || '').replace(/_/g, ' ').toUpperCase()}
-                  </Badge>
+                  ) : <span className="text-gray-400">-</span>}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                   {enquiry.followUpDate || enquiry.nextFollowUpAt || enquiry.nextFollowUp 
@@ -296,44 +285,17 @@ const EnquiryTable = ({ enquiries = [] }) => {
                       className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-xs font-medium flex items-center space-x-1"
                     >
                       <ContactIcons.message size={14} />
-                      <span>Comments</span>
+                      <span>{commentCounts[enquiry.id] || 0}</span>
                     </button>
-                    {commentCounts[enquiry.id] > 0 && (
-                      <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 text-green-800 rounded-full text-xs font-bold">
-                        {commentCounts[enquiry.id]}
-                      </span>
-                    )}
                   </div>
                 </td>
-                <td className="px-4 py-4">
-                  {enquiry.status === 'CLOSED_WON' ? (
-                    <div className="flex items-center space-x-2">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        🎉 Booking Complete
-                      </span>
-                    </div>
-                  ) : enquiry.status === 'UNQUALIFIED' ? (
-                    <div className="flex items-center space-x-2">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        🚫 Customer Disqualified
-                      </span>
-                    </div>
-                  ) : enquiry.status === 'CLOSED_LOST' ? (
-                    <div className="flex items-center space-x-2">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        ❌ Not Converted
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        🔄 In Progress
-                      </span>
-                    </div>
-                  )}
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <Badge variant={getStatusVariant(enquiry.status)}>
+                    {(enquiry.status || 'NEW').replace(/_/g, ' ').toUpperCase()}
+                  </Badge>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {enquiry.assignedTo?.name || enquiry.assignedTo || 'Unassigned'}
+                  {enquiry.assignedTo?.name || (typeof enquiry.assignedTo === 'string' ? enquiry.assignedTo : 'Unassigned')}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(enquiry.createdAt || enquiry.submittedAt)}

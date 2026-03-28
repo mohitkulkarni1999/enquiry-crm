@@ -34,7 +34,14 @@ export const AppProvider = ({ children }) => {
     setError(null);
     try {
       const response = await enquiryAPI.getAll();
-      setEnquiries(response.content || response || []);
+      const data = response.content || response || [];
+      // Sort enquiries by created date newest first
+      const sortedData = [...data].sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.submittedAt || 0);
+        const dateB = new Date(b.createdAt || b.submittedAt || 0);
+        return dateB - dateA;
+      });
+      setEnquiries(sortedData);
     } catch (err) {
       setError(err.message);
       console.error('Error loading enquiries:', err);

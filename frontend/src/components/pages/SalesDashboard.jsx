@@ -653,42 +653,38 @@ const SalesDashboard = () => {
             </div>
             <div className="overflow-x-auto">
             <table className="w-full min-w-[700px]">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interest</th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow Up</th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Details</th>
+                  <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Interest</th>
+                  <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Follow Up At</th>
+                  <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Comments</th>
+                  <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Current Status</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-100">
                 {myEnquiries.map((e) => (
-                  <tr key={e.id} className="hover:bg-gray-50">
+                  <tr key={e.id} className="hover:bg-blue-50/30 transition-colors">
                     <td className="px-3 py-4">
-                      <div className="font-semibold text-gray-900 truncate">{e.customerName}</div>
-                      <div className="text-xs text-gray-500 truncate">{e.customerEmail}</div>
-                      <div className="text-xs text-gray-500">{e.customerMobile || e.customerPhone}</div>
+                      <div className="font-semibold text-gray-900 truncate">{e.customerName || e.name}</div>
+                      <div className="text-xs text-gray-500 truncate">{e.customerEmail || e.email}</div>
+                      <div className="text-xs text-gray-500">📞 {e.customerMobile || e.customerPhone || e.mobile || 'No phone'}</div>
+                    </td>
+                    <td className="px-3 py-4">
+                      <div className="text-xs font-medium text-gray-800">🏠 {e.propertyType?.replace(/_/g, ' ') || 'Any'}</div>
+                      <div className="text-xs text-gray-500">💰 {e.budgetRange?.replace(/_/g, ' ') || 'No budget'}</div>
                     </td>
                     <td className="px-3 py-4">
                       <select
                         value={e.interestLevel || ''}
                         onChange={(ev) => handleInterestChange(e.id, ev.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        className={`w-full px-2 py-1 border border-gray-200 rounded text-xs bg-white focus:ring-2 focus:ring-blue-500 font-medium ${
+                          e.interestLevel === 'hot' ? 'text-red-600' : e.interestLevel === 'warm' ? 'text-orange-600' : 'text-blue-600'
+                        }`}
                       >
                         {interestOptions.map(opt => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-3 py-4">
-                      <select
-                        value={e.status || ''}
-                        onChange={(ev) => handleActionChange(e.id, ev.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        {actionOptions.map(opt => (
                           <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
                       </select>
@@ -697,39 +693,53 @@ const SalesDashboard = () => {
                       <input
                         type="date"
                         onChange={(ev) => handleFollowUpDate(e.id, ev.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-2 py-1 border border-gray-200 rounded text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                         defaultValue={e.nextFollowUpAt ? new Date(e.nextFollowUpAt).toISOString().substring(0,10) : ''}
                       />
+                    </td>
+                    <td className="px-3 py-4">
+                      <select
+                        value={e.status || ''}
+                        onChange={(ev) => handleActionChange(e.id, ev.target.value)}
+                        className="w-full px-2 py-1 border border-gray-200 rounded text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                      >
+                        {actionOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
                     </td>
                     <td className="px-3 py-4">
                       <div className="flex items-center justify-center">
                         <button
                           onClick={() => openCommentModal(e)}
-                          className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs font-medium flex items-center space-x-1"
+                          className="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded hover:from-blue-700 hover:to-indigo-700 transition-all text-xs font-bold flex items-center space-x-1.5 shadow-sm"
                         >
-                          <ContactIcons.message size={12} />
+                          <ContactIcons.message size={14} />
                           <span>{commentCounts[e.id] || 0}</span>
                         </button>
                       </div>
                     </td>
                     <td className="px-3 py-4">
-                      {e.status === 'CLOSED_WON' || e.status === 'BOOKED' ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          🎉 Booked
-                        </span>
-                      ) : e.status === 'UNQUALIFIED' ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                          🚫 Unqualified
-                        </span>
-                      ) : e.status === 'CLOSED_LOST' ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          ❌ Lost
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          🔄 Active
-                        </span>
-                      )}
+                      <div className="flex flex-col items-center gap-1">
+                        {e.status === 'CLOSED_WON' || e.status === 'BOOKED' ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-200">
+                            ✨ Booked
+                          </span>
+                        ) : e.status === 'UNQUALIFIED' ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-200">
+                            🚫 Unqualified
+                          </span>
+                        ) : e.status === 'CLOSED_LOST' ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+                            ❌ Lost
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                            🔄 Active
+                          </span>
+                        )}
+                        <span className="text-[10px] text-gray-400 font-medium">{e.status?.replace(/_/g, ' ')}</span>
+                      </div>
                     </td>
                   </tr>
                 ))}
