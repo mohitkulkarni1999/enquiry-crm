@@ -395,6 +395,15 @@ export const notificationAPI = {
   getUpcomingFollowUps: (userId) => fetchAPI(`/notifications/upcoming/${userId}`),
 };
 
+// Settings API
+export const settingsAPI = {
+  getFormConfig: () => fetchAPI('/settings/form-config'),
+  updateFormConfig: (config) => fetchAPI('/settings/form-config', {
+    method: 'POST',
+    body: config,
+  }),
+};
+
 export default {
   auth: authAPI,
   user: userAPI,
@@ -403,4 +412,5 @@ export default {
   salesActivity: salesActivityAPI,
   comment: commentAPI,
   notification: notificationAPI,
+  settings: settingsAPI,
 };
