@@ -51,7 +51,7 @@ async function initializeDatabase() {
         is_active TINYINT(1) DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      )
     `);
 
     await conn.execute(`
@@ -67,7 +67,7 @@ async function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      )
     `);
 
     await conn.execute(`
@@ -89,7 +89,7 @@ async function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (assigned_to) REFERENCES sales_persons(id) ON DELETE SET NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      )
     `);
 
     await conn.execute(`
@@ -106,7 +106,7 @@ async function initializeDatabase() {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (enquiry_id) REFERENCES enquiries(id) ON DELETE CASCADE,
         FOREIGN KEY (sales_person_id) REFERENCES sales_persons(id) ON DELETE SET NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      )
     `);
 
     await conn.execute(`
@@ -118,7 +118,7 @@ async function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (enquiry_id) REFERENCES enquiries(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      )
     `);
 
     await conn.execute(`
@@ -126,7 +126,7 @@ async function initializeDatabase() {
         setting_key VARCHAR(100) PRIMARY KEY,
         setting_value JSON NOT NULL,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      )
     `);
 
     // Seed default form config if not exists
