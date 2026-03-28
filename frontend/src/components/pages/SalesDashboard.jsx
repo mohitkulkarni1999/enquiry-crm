@@ -52,7 +52,7 @@ const SalesDashboard = () => {
   };
 
   useEffect(() => {
-    const loadUserEnquiries = async () => {
+    const loadUserEnquiries = () => {
       if (!user) {
         console.log('No user found');
         return;
@@ -61,93 +61,44 @@ const SalesDashboard = () => {
       console.log('=== SALES DASHBOARD DEBUG ===');
       console.log('Current user:', user);
       
-      try {
-        // First, try to get enquiries by sales person ID using the backend API
-        let userEnquiries = [];
-        
-        if (user.id) {
-          console.log('Fetching enquiries for user ID:', user.id);
-          userEnquiries = await enquiryAPI.getBySalesPerson(user.id);
-          console.log('Enquiries from API by user ID:', userEnquiries);
-        }
-        
-        // Skip the problematic username API call
-        
-        // If still no enquiries, try to find the sales person by username and get their ID
-        if (userEnquiries.length === 0 && user.username) {
-          console.log('No enquiries found by username, trying to find sales person by username:', user.username);
+      let userEnquiries = [];
+      
+      if (enquiries && Array.isArray(enquiries)) {
+        userEnquiries = enquiries.filter(e => {
+          if (!e.assignedTo) return false;
           
-          // Get all sales persons and find the one matching current user
-          const salesPersons = await salesPersonAPI.getAll();
-          console.log('All sales persons:', salesPersons);
-          
-          const currentSalesPerson = salesPersons.content?.find(sp => 
-            sp.name === user.username || 
-            sp.username === user.username ||
-            sp.email === user.email ||
-            sp.user?.username === user.username
-          ) || salesPersons.find(sp => 
-            sp.name === user.username || 
-            sp.username === user.username ||
-            sp.email === user.email ||
-            sp.user?.username === user.username
-          );
-          
-          console.log('Found sales person:', currentSalesPerson);
-          
-          if (currentSalesPerson && currentSalesPerson.id) {
-            console.log('Fetching enquiries for sales person ID:', currentSalesPerson.id);
-            userEnquiries = await enquiryAPI.getBySalesPerson(currentSalesPerson.id);
-            console.log('Enquiries from API by sales person ID:', userEnquiries);
+          if (typeof e.assignedTo === 'object' && e.assignedTo !== null) {
+            return e.assignedTo.id === user.id || 
+                   e.assignedTo.name === user.username ||
+                   e.assignedTo.username === user.username ||
+                   e.assignedTo.email === user.email;
           }
-        }
-        
-        // If still no enquiries, fallback to filtering all enquiries (as backup)
-        if (userEnquiries.length === 0 && enquiries && enquiries.length > 0) {
-          console.log('Fallback: filtering all enquiries on frontend');
-          userEnquiries = enquiries.filter(e => {
-            if (!e.assignedTo) return false;
-            
-            if (typeof e.assignedTo === 'object' && e.assignedTo !== null) {
-              return e.assignedTo.id === user.id || 
-                     e.assignedTo.name === user.username ||
-                     e.assignedTo.username === user.username;
-            }
-            
-            return e.assignedTo === user.id || e.assignedTo === user.username;
-          });
-        }
-        
-        console.log('Final user enquiries:', userEnquiries.length);
-        console.log('User enquiries data:', userEnquiries);
-        
-        setMyEnquiries(userEnquiries);
-
-        // Calculate metrics
-        const totalAssigned = userEnquiries.length;
-        const inProgress = userEnquiries.filter(e => 
-          ['IN_PROGRESS', 'INTERESTED', 'FOLLOW_UP_SCHEDULED', 'SITE_VISIT_SCHEDULED'].includes(e.status)
-        ).length;
-        const converted = userEnquiries.filter(e => e.status === 'CLOSED_WON').length;
-        const conversionRate = totalAssigned > 0 ? Math.round((converted / totalAssigned) * 100) : 0;
-        
-        // Set total bookings for this sales person
-        setTotalBookings(converted);
-
-        setSalesMetrics({
-          totalAssigned,
-          inProgress,
-          converted,
-          conversionRate,
-          thisWeekCalls: 12,
-          thisWeekMeetings: 8
+          
+          return e.assignedTo === user.id || e.assignedTo === user.username;
         });
-
-      } catch (error) {
-        console.error('Error loading user enquiries:', error);
-        // Fallback to empty array
-        setMyEnquiries([]);
       }
+        
+      setMyEnquiries(userEnquiries);
+
+      // Calculate metrics
+      const totalAssigned = userEnquiries.length;
+      const inProgress = userEnquiries.filter(e => 
+        ['IN_PROGRESS', 'INTERESTED', 'FOLLOW_UP_SCHEDULED', 'SITE_VISIT_SCHEDULED'].includes(e.status)
+      ).length;
+      const converted = userEnquiries.filter(e => ['CLOSED_WON', 'BOOKED'].includes(e.status)).length;
+      const conversionRate = totalAssigned > 0 ? Math.round((converted / totalAssigned) * 100) : 0;
+      
+      // Set total bookings for this sales person
+      setTotalBookings(converted);
+
+      setSalesMetrics({
+        totalAssigned,
+        inProgress,
+        converted,
+        conversionRate,
+        thisWeekCalls: 12,
+        thisWeekMeetings: 8
+      });
     };
 
     loadUserEnquiries();
@@ -196,7 +147,6 @@ const SalesDashboard = () => {
         console.log('Updating interest level:', enquiryId, interest);
         await updateInterestLevel(enquiryId, interest);
         showToast.success('Interest level updated successfully');
-        loadMyEnquiries();
       }
     } catch (e) {
       console.error('Error updating interest level:', e);
@@ -220,7 +170,6 @@ const SalesDashboard = () => {
             showToast.success('🎉 Congratulations! Booking confirmed and enquiry successfully closed!');
           } else {
             // Reset the dropdown if user cancels
-            loadMyEnquiries();
             return;
           }
         } else {
@@ -239,8 +188,6 @@ const SalesDashboard = () => {
           const message = successMessages[status] || 'Action updated successfully';
           showToast.success(message);
         }
-        
-        loadMyEnquiries();
       }
     } catch (e) {
       console.error('Error updating action:', e);

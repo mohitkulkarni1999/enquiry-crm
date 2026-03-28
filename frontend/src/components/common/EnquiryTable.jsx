@@ -285,7 +285,9 @@ const EnquiryTable = ({ enquiries = [] }) => {
                   </Badge>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {enquiry.nextFollowUpAt ? formatDate(enquiry.nextFollowUpAt) : '-'}
+                  {enquiry.followUpDate || enquiry.nextFollowUpAt || enquiry.nextFollowUp 
+                    ? formatDate(enquiry.followUpDate || enquiry.nextFollowUpAt || enquiry.nextFollowUp) 
+                    : '-'}
                 </td>
                 <td className="px-4 py-4">
                   <div className="flex items-center space-x-2">

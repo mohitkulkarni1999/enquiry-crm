@@ -216,11 +216,11 @@ const SalesTeamPerformance = () => {
                       <td className="px-4 py-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                            {metrics.user.name?.charAt(0) || metrics.user.username?.charAt(0) || 'U'}
+                            {metrics.user?.name?.charAt(0) || metrics.user?.username?.charAt(0) || 'U'}
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-900">{metrics.user.name || metrics.user.username}</div>
-                            <div className="text-sm text-gray-500">{metrics.user.email}</div>
+                            <div className="font-semibold text-gray-900">{metrics.user?.name || metrics.user?.username}</div>
+                            <div className="text-sm text-gray-500">{metrics.user?.email}</div>
                           </div>
                         </div>
                       </td>
