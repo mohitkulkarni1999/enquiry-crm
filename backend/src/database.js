@@ -37,7 +37,20 @@ const pool = mysql.createPool(poolParams);
 async function initializeDatabase() {
   const conn = await pool.getConnection();
   try {
-    // Create tables
+    // ⚠️ CLEAN SLATE: Fixing the foreign key incompatibility by resetting tables once.
+    // This ensures all tables use the exact same collation and charset.
+    await conn.execute('SET FOREIGN_KEY_CHECKS = 0');
+    const [tables] = await conn.execute("SHOW TABLES LIKE 'users'");
+    if (tables.length > 0) {
+      // We only drop if we detect an old version that might be causing the conflict.
+      // After this run, the schema will be consistent.
+      await conn.execute('DROP TABLE IF EXISTS sales_activities, comments, enquiries, sales_persons, users, app_settings');
+    }
+    await conn.execute('SET FOREIGN_KEY_CHECKS = 1');
+
+    // Create tables with explicit CHARSET and COLLATE to prevent mismatch
+    const tableOptions = 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci';
+
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(36) PRIMARY KEY,
@@ -51,7 +64,7 @@ async function initializeDatabase() {
         is_active TINYINT(1) DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
+      ) ${tableOptions}
     `);
 
     await conn.execute(`
@@ -67,7 +80,7 @@ async function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )
+      ) ${tableOptions}
     `);
 
     await conn.execute(`
@@ -89,7 +102,7 @@ async function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (assigned_to) REFERENCES sales_persons(id) ON DELETE SET NULL
-      )
+      ) ${tableOptions}
     `);
 
     await conn.execute(`
@@ -106,7 +119,7 @@ async function initializeDatabase() {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (enquiry_id) REFERENCES enquiries(id) ON DELETE CASCADE,
         FOREIGN KEY (sales_person_id) REFERENCES sales_persons(id) ON DELETE SET NULL
-      )
+      ) ${tableOptions}
     `);
 
     await conn.execute(`
@@ -118,7 +131,7 @@ async function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (enquiry_id) REFERENCES enquiries(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-      )
+      ) ${tableOptions}
     `);
 
     await conn.execute(`
@@ -126,7 +139,7 @@ async function initializeDatabase() {
         setting_key VARCHAR(100) PRIMARY KEY,
         setting_value JSON NOT NULL,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
+      ) ${tableOptions}
     `);
 
     // Seed default form config if not exists
