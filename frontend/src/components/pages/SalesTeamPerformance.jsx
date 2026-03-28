@@ -206,7 +206,6 @@ const SalesTeamPerformance = () => {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bookings</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">In Progress</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conversion Rate</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -246,7 +245,6 @@ const SalesTeamPerformance = () => {
                           <span className="text-sm font-medium text-gray-900">{metrics.conversionRate}%</span>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm font-semibold text-gray-900">{formatCurrency(metrics.revenue)}</td>
                       <td className="px-4 py-4">
                         <Button
                           size="xs"
@@ -317,15 +315,6 @@ const SalesTeamPerformance = () => {
                   trend={individualMetrics.conversionRate > 25 ? "up" : "neutral"}
                   trendValue={individualMetrics.conversionRate > 25 ? "Above average" : "Keep going"}
                   subtitle="Success rate"
-                />
-                <StatisticsCard
-                  title="Revenue Generated"
-                  value={formatCurrency(individualMetrics.revenue)}
-                  icon={<BusinessIcons.trending size={24} />}
-                  color="indigo"
-                  trend="up"
-                  trendValue="Total earnings"
-                  subtitle="From bookings"
                 />
               </div>
 

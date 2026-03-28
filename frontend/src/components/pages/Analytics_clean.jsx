@@ -165,22 +165,13 @@ const Analytics = () => {
         {/* Key Performance Indicators */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatisticsCard
-            title="Total Revenue"
-            value={`₹${(analyticsData.totalRevenue / 100000).toFixed(1)}L`}
-            icon={<BusinessIcons.money size={24} />}
-            color="green"
-            trend="up"
-            trendValue="+22% from last month"
-            subtitle="Closed deals value"
-          />
-          <StatisticsCard
-            title="Avg Deal Size"
-            value={`₹${(analyticsData.avgDealSize / 1000).toFixed(0)}K`}
-            icon={<BusinessIcons.trending size={24} />}
+            title="Total Enquiries"
+            value={enquiries.length.toString()}
+            icon={<BusinessIcons.briefcase size={24} />}
             color="blue"
-            trend="up"
-            trendValue="+8% improvement"
-            subtitle="Per deal average"
+            trend="neutral"
+            trendValue="All time"
+            subtitle="Total Leads in System"
           />
           <StatisticsCard
             title="Conversion Rate"
@@ -188,17 +179,26 @@ const Analytics = () => {
             icon={<BusinessIcons.target size={24} />}
             color="purple"
             trend="up"
-            trendValue="Above industry avg"
-            subtitle="Lead to customer"
+            trendValue="Overall Success"
+            subtitle="Lead to Customer Rate"
           />
           <StatisticsCard
-            title="Active Pipeline"
-            value={`₹${(enquiries.filter(e => ['IN_PROGRESS', 'INTERESTED', 'NEGOTIATION'].includes(e.status)).length * 50000 / 100000).toFixed(1)}L`}
+            title="Opportunities Pipeline"
+            value={analyticsData.conversionFunnel.opportunities.toString()}
             icon={<BusinessIcons.activity size={24} />}
             color="indigo"
             trend="up"
-            trendValue="Strong pipeline"
-            subtitle="Potential revenue"
+            trendValue="Active Work"
+            subtitle="Interested & In Progress"
+          />
+          <StatisticsCard
+            title="Total Bookings"
+            value={analyticsData.conversionFunnel.closedWon.toString()}
+            icon={<BusinessIcons.award size={24} />}
+            color="green"
+            trend="up"
+            trendValue="Closed Won"
+            subtitle="Successfully Completed"
           />
         </div>
 
@@ -316,7 +316,6 @@ const Analytics = () => {
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">Total Enquiries</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">Closed Deals</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">Conversion Rate</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Revenue</th>
                 </tr>
               </thead>
               <tbody>
@@ -345,9 +344,6 @@ const Analytics = () => {
                       <span className={`font-bold ${performer.rate > 20 ? 'text-green-600' : 'text-yellow-600'}`}>
                         {performer.rate}%
                       </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="font-bold text-purple-600">₹{(performer.revenue / 100000).toFixed(1)}L</span>
                     </td>
                   </tr>
                 ))}

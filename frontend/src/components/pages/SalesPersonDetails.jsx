@@ -224,7 +224,7 @@ const SalesPersonDetails = () => {
         </div>
 
         {/* Individual Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatisticsCard
             title="Total Enquiries"
             value={salesPersonDetails.totalEnquiries}
@@ -251,15 +251,6 @@ const SalesPersonDetails = () => {
             trend={salesPersonDetails.conversionRate > 25 ? "up" : "neutral"}
             trendValue={salesPersonDetails.conversionRate > 25 ? "Above average" : "Keep going"}
             subtitle="Success rate"
-          />
-          <StatisticsCard
-            title="Revenue Generated"
-            value={formatCurrency(salesPersonDetails.revenue)}
-            icon={<BusinessIcons.trending size={24} />}
-            color="indigo"
-            trend="up"
-            trendValue="Total earnings"
-            subtitle="From bookings"
           />
         </div>
 

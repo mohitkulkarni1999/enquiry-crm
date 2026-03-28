@@ -684,7 +684,6 @@ const SuperAdminDashboard = () => {
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <span>📊 {performer.total} Total Enquiries</span>
                       <span>✅ {performer.closed} Closed Deals</span>
-                      <span>💰 ₹{(performer.revenue / 1000).toFixed(0)}K Revenue</span>
                     </div>
                   </div>
                 </div>
