@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
-import { authAPI } from '../utils/api';
+import { authAPI, setAuthTokenProvider } from '../utils/api';
 import { toast } from 'react-hot-toast';
 
 const AuthContext = createContext(null);
@@ -17,16 +17,13 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  // Auto-login for development
+  // Wire up token provider so API calls include Authorization header
   useEffect(() => {
-    if (!user) {
-      // Try to restore session or auto-login for development
-      const savedUser = localStorage.getItem('auth:user');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      }
-    }
+    const token = localStorage.getItem('auth:token');
+    setAuthTokenProvider(() => localStorage.getItem('auth:token'));
   }, []);
+
+  // Session persists via localStorage — restored by useState initializer above
 
   const login = async (credentials) => {
     setLoading(true);
@@ -42,6 +39,10 @@ export const AuthProvider = ({ children }) => {
           console.log('Login successful, user role:', response.user.role);
           setUser(response.user);
           localStorage.setItem('auth:user', JSON.stringify(response.user));
+          if (response.token) {
+            localStorage.setItem('auth:token', response.token);
+            setAuthTokenProvider(() => response.token);
+          }
           toast.success('Login successful!');
           return response.user;
         } else {
@@ -65,12 +66,16 @@ export const AuthProvider = ({ children }) => {
       await authAPI.logout();
       setUser(null);
       localStorage.removeItem('auth:user');
+      localStorage.removeItem('auth:token');
+      setAuthTokenProvider(() => null);
       toast.success('Logged out successfully');
     } catch (error) {
       console.error('Logout error:', error);
       // Still clear local state even if API call fails
       setUser(null);
       localStorage.removeItem('auth:user');
+      localStorage.removeItem('auth:token');
+      setAuthTokenProvider(() => null);
     } finally {
       setLoading(false);
     }

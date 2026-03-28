@@ -7,7 +7,7 @@ import { enquiryAPI } from '../../utils/api';
 
 const EnquiryForm = ({ onSuccess }) => {
   const { createEnquiry, loading } = useAppContext();
-  
+
   const [formData, setFormData] = useState({
     customerName: '',
     customerEmail: '',
@@ -86,7 +86,7 @@ const EnquiryForm = ({ onSuccess }) => {
       ...prev,
       [name]: name === 'priority' ? parseInt(value) : value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -139,17 +139,17 @@ const EnquiryForm = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       // Clean mobile number to only digits
       const cleanMobile = formData.customerMobile.replace(/\D/g, '');
-      
+
       // Map UI selections to backend enums/fields
       let mappedPropertyType = formData.propertyType;
       let mappedBudget = formData.budgetRange;
@@ -183,7 +183,7 @@ const EnquiryForm = ({ onSuccess }) => {
       };
       const backendSource = sourceMap[mappedSource] || 'WEBSITE';
 
-      if (['CP','REFERRAL','OTHER'].includes(formData.source) && formData.sourceNote?.trim()) {
+      if (['CP', 'REFERRAL', 'OTHER'].includes(formData.source) && formData.sourceNote?.trim()) {
         remarks += `Source Note: ${formData.sourceNote.trim()}`;
       }
 
@@ -214,7 +214,7 @@ const EnquiryForm = ({ onSuccess }) => {
       });
 
       alert(`Enquiry submitted successfully! Reference ID: ${newEnquiry.id}`);
-      
+
       if (onSuccess) {
         onSuccess(newEnquiry);
       }
@@ -238,7 +238,7 @@ const EnquiryForm = ({ onSuccess }) => {
               Please fill out the form below to submit your enquiry
             </p>
           </div>
-          
+
           {!submittedEnquiry && step === 'mobile' && (
             <div>
               <div>
@@ -250,9 +250,8 @@ const EnquiryForm = ({ onSuccess }) => {
                   name="customerMobile"
                   value={formData.customerMobile}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.customerMobile ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.customerMobile ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Enter 10-digit mobile number"
                   pattern="[0-9]{10}"
                   required
@@ -277,186 +276,181 @@ const EnquiryForm = ({ onSuccess }) => {
           )}
 
           {!submittedEnquiry && step === 'form' && (
-          <form onSubmit={handleSubmit}>
-            {existingEnquiry && (
-              <div className="flex items-start justify-between p-3 sm:p-4 mb-4 rounded-md border bg-amber-50 border-amber-200">
-                <div className="text-xs sm:text-sm text-amber-800">
-                  Existing record found for this mobile. Review and submit, or click Edit.
+            <form onSubmit={handleSubmit}>
+              {existingEnquiry && (
+                <div className="flex items-start justify-between p-3 sm:p-4 mb-4 rounded-md border bg-amber-50 border-amber-200">
+                  <div className="text-xs sm:text-sm text-amber-800">
+                    Existing record found for this mobile. Review and submit, or click Edit.
+                  </div>
+                  {!isEditMode && (
+                    <Button type="button" variant="secondary" onClick={() => setIsEditMode(true)}>
+                      Edit form
+                    </Button>
+                  )}
                 </div>
-                {!isEditMode && (
-                  <Button type="button" variant="secondary" onClick={() => setIsEditMode(true)}>
-                    Edit form
-                  </Button>
+              )}
+              {/* Customer Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Customer Name *
+                </label>
+                <input
+                  type="text"
+                  name="customerName"
+                  value={formData.customerName}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.customerName ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  placeholder="Enter customer name"
+                  required
+                  disabled={!!existingEnquiry && !isEditMode}
+                />
+                {errors.customerName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.customerName}</p>
                 )}
               </div>
-            )}
-            {/* Customer Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Customer Name *
-              </label>
-              <input
-                type="text"
-                name="customerName"
-                value={formData.customerName}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.customerName ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter customer name"
-                required
-                disabled={!!existingEnquiry && !isEditMode}
-              />
-              {errors.customerName && (
-                <p className="mt-1 text-sm text-red-600">{errors.customerName}</p>
-              )}
-            </div>
 
-            {/* Customer Email (optional) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address (optional)
-              </label>
-              <input
-                type="email"
-                name="customerEmail"
-                value={formData.customerEmail}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.customerEmail ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter email address"
-                disabled={!!existingEnquiry && !isEditMode}
-              />
-              {errors.customerEmail && (
-                <p className="mt-1 text-sm text-red-600">{errors.customerEmail}</p>
-              )}
-            </div>
+              {/* Customer Email (optional) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address (optional)
+                </label>
+                <input
+                  type="email"
+                  name="customerEmail"
+                  value={formData.customerEmail}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.customerEmail ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  placeholder="Enter email address"
+                  disabled={!!existingEnquiry && !isEditMode}
+                />
+                {errors.customerEmail && (
+                  <p className="mt-1 text-sm text-red-600">{errors.customerEmail}</p>
+                )}
+              </div>
 
-            {/* Customer Mobile */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mobile Number *
-              </label>
-              <input
-                type="tel"
-                name="customerMobile"
-                value={formData.customerMobile}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.customerMobile ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter 10-digit mobile number"
-                pattern="[0-9]{10}"
-                required
-                disabled={!!existingEnquiry && !isEditMode}
-              />
-              {errors.customerMobile && (
-                <p className="mt-1 text-sm text-red-600">{errors.customerMobile}</p>
-              )}
-            </div>
+              {/* Customer Mobile */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mobile Number *
+                </label>
+                <input
+                  type="tel"
+                  name="customerMobile"
+                  value={formData.customerMobile}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.customerMobile ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  placeholder="Enter 10-digit mobile number"
+                  pattern="[0-9]{10}"
+                  required
+                  disabled={!!existingEnquiry && !isEditMode}
+                />
+                {errors.customerMobile && (
+                  <p className="mt-1 text-sm text-red-600">{errors.customerMobile}</p>
+                )}
+              </div>
 
-            {/* Property Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Property Type *
-              </label>
-              <select
-                name="propertyType"
-                value={formData.propertyType}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.propertyType ? 'border-red-500' : 'border-gray-300'
-                }`}
-                required
-                disabled={!!existingEnquiry && !isEditMode}
-              >
-                <option value="">Select property type</option>
-                {propertyTypes.map(type => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
-                ))}
-              </select>
-              {errors.propertyType && (
-                <p className="mt-1 text-sm text-red-600">{errors.propertyType}</p>
-              )}
-            </div>
+              {/* Property Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Property Type *
+                </label>
+                <select
+                  name="propertyType"
+                  value={formData.propertyType}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.propertyType ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  required
+                  disabled={!!existingEnquiry && !isEditMode}
+                >
+                  <option value="">Select property type</option>
+                  {propertyTypes.map(type => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
+                </select>
+                {errors.propertyType && (
+                  <p className="mt-1 text-sm text-red-600">{errors.propertyType}</p>
+                )}
+              </div>
 
-            {/* Budget Range */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Budget Range *
-              </label>
-              <select
-                name="budgetRange"
-                value={formData.budgetRange}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.budgetRange ? 'border-red-500' : 'border-gray-300'
-                }`}
-                required
-                disabled={!!existingEnquiry && !isEditMode}
-              >
-                <option value="">Select budget range</option>
-                {budgetRanges.map(range => (
-                  <option key={range.value} value={range.value}>{range.label}</option>
-                ))}
-              </select>
-              {errors.budgetRange && (
-                <p className="mt-1 text-sm text-red-600">{errors.budgetRange}</p>
-              )}
-            </div>
+              {/* Budget Range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Budget Range *
+                </label>
+                <select
+                  name="budgetRange"
+                  value={formData.budgetRange}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.budgetRange ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  required
+                  disabled={!!existingEnquiry && !isEditMode}
+                >
+                  <option value="">Select budget range</option>
+                  {budgetRanges.map(range => (
+                    <option key={range.value} value={range.value}>{range.label}</option>
+                  ))}
+                </select>
+                {errors.budgetRange && (
+                  <p className="mt-1 text-sm text-red-600">{errors.budgetRange}</p>
+                )}
+              </div>
 
-            {/* Removed: Location Preference, Requirements, Priority */}
+              {/* Removed: Location Preference, Requirements, Priority */}
 
-            {/* Source with conditional note for CP/Referal/Other */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Source
-              </label>
-              <select
-                name="source"
-                value={formData.source}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={!!existingEnquiry && !isEditMode}
-              >
-                {sources.map(source => (
-                  <option key={source.value} value={source.value}>
-                    {source.label}
-                  </option>
-                ))}
-              </select>
-              {(formData.source === 'CP' || formData.source === 'REFERRAL' || formData.source === 'OTHER') && (
-                <div className="mt-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Note
-                  </label>
-                  <textarea
-                    name="sourceNote"
-                    value={formData.sourceNote}
-                    onChange={handleInputChange}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Add details for selected source"
-                    disabled={!!existingEnquiry && !isEditMode}
-                  />
-                </div>
-              )}
-            </div>
+              {/* Source with conditional note for CP/Referal/Other */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Source
+                </label>
+                <select
+                  name="source"
+                  value={formData.source}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={!!existingEnquiry && !isEditMode}
+                >
+                  {sources.map(source => (
+                    <option key={source.value} value={source.value}>
+                      {source.label}
+                    </option>
+                  ))}
+                </select>
+                {(formData.source === 'CP' || formData.source === 'REFERRAL' || formData.source === 'OTHER') && (
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Note
+                    </label>
+                    <textarea
+                      name="sourceNote"
+                      value={formData.sourceNote}
+                      onChange={handleInputChange}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Add details for selected source"
+                      disabled={!!existingEnquiry && !isEditMode}
+                    />
+                  </div>
+                )}
+              </div>
 
-            {/* Submit Button */}
-            <div className="pt-4">
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full"
-                size="lg"
-                disabled={isSubmitting || loading || (!!existingEnquiry && !isEditMode)}
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Enquiry'}
-              </Button>
-            </div>
-          </form>
+              {/* Submit Button */}
+              <div className="pt-4">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-full"
+                  size="lg"
+                  disabled={isSubmitting || loading || (!!existingEnquiry && !isEditMode)}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Enquiry'}
+                </Button>
+              </div>
+            </form>
           )}
 
           {submittedEnquiry && (
