@@ -48,6 +48,7 @@ const salesPersonsRoutes = require('./routes/salesPersons');
 const salesActivitiesRoutes = require('./routes/salesActivities');
 const usersRoutes = require('./routes/users');
 const notificationsRoutes = require('./routes/notifications');
+const settingsRoutes = require('./routes/settings');
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/enquiries', enquiriesRoutes);
@@ -55,6 +56,7 @@ app.use('/api/v1/sales-persons', salesPersonsRoutes);
 app.use('/api/v1/sales-activities', salesActivitiesRoutes);
 app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/notifications', notificationsRoutes);
+app.use('/api/v1/settings', settingsRoutes);
 
 // 404
 app.use((req, res) => res.status(404).json({ error: `Route ${req.method} ${req.path} not found` }));
