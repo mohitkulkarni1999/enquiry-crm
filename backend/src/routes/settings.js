@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../database');
-const { verifyToken, isSuperAdmin } = require('../middleware/auth');
+const { authenticate, requireRole } = require('../middleware/auth');
 
 // Get form configuration
 router.get('/form-config', async (req, res) => {
@@ -16,7 +16,7 @@ router.get('/form-config', async (req, res) => {
 });
 
 // Update form configuration (Super Admin only)
-router.post('/form-config', verifyToken, async (req, res) => {
+router.post('/form-config', authenticate, requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const config = req.body;
     if (!Array.isArray(config)) {
