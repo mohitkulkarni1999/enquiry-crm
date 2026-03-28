@@ -490,26 +490,29 @@ const EnquiryTable = ({ enquiries = [] }) => {
               <div className="space-y-4 mb-6">
                 {comments.length > 0 ? (
                   comments.map((comment, index) => {
-                    const date = new Date(comment.createdAt).toLocaleDateString('en-IN', { 
+                    const createdAt = comment.createdAt || comment.created_at;
+                    const date = createdAt ? new Date(createdAt).toLocaleDateString('en-IN', { 
                       day: '2-digit', 
                       month: '2-digit', 
                       year: 'numeric' 
-                    });
-                    const time = new Date(comment.createdAt).toLocaleTimeString('en-IN', { 
+                    }) : 'No Date';
+                    const time = createdAt ? new Date(createdAt).toLocaleTimeString('en-IN', { 
                       hour: '2-digit', 
                       minute: '2-digit',
                       hour12: true 
-                    });
+                    }) : '';
+                    
+                    const commentNum = comment.commentNumber || (comments.length - index);
                     
                     return (
                       <div key={comment.id} className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center space-x-2">
                             <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
-                              {comment.commentNumber}
+                              {commentNum}
                             </span>
-                            <span className="text-xs font-medium text-gray-600">Comment #{comment.commentNumber}</span>
-                            <span className="text-xs text-gray-500">by {comment.user?.name || comment.userName || comment.user?.username || 'System'}</span>
+                            <span className="text-xs font-medium text-gray-600">Comment #{commentNum}</span>
+                            <span className="text-xs text-gray-500">by {comment.user?.name || comment.userName || comment.user_name || comment.user?.username || 'System'}</span>
                           </div>
                           <div className="text-xs text-gray-500">
                             <div className="font-medium">{date}</div>
@@ -517,7 +520,7 @@ const EnquiryTable = ({ enquiries = [] }) => {
                           </div>
                         </div>
                         <div className="text-sm text-gray-800 whitespace-pre-wrap pl-8">
-                          "{comment.commentText}"
+                          "{comment.commentText || comment.comment_text || '...'}"
                         </div>
                       </div>
                     );

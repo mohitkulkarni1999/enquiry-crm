@@ -323,7 +323,14 @@ router.post('/:id/schedule-follow-up', async (req, res) => {
 // GET /enquiries/:id/comments
 router.get('/:id/comments', authenticate, async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM comments WHERE enquiry_id = ? ORDER BY created_at DESC', [req.params.id]);
+    const query = `
+      SELECT c.*, u.name as user_name 
+      FROM comments c 
+      LEFT JOIN users u ON c.user_id = u.id 
+      WHERE c.enquiry_id = ? 
+      ORDER BY c.created_at DESC
+    `;
+    const [rows] = await pool.execute(query, [req.params.id]);
     return res.json(rows);
   } catch (err) { return res.status(500).json({ error: err.message }); }
 });
