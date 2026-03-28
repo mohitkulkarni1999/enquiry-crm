@@ -37,23 +37,25 @@ const pool = mysql.createPool(poolParams);
 async function initializeDatabase() {
   const conn = await pool.getConnection();
   try {
-    // ⚠️ CLEAN SLATE: Fixing the foreign key incompatibility by resetting tables once.
-    // This ensures all tables use the exact same collation and charset.
+    // Force UTF-8 communication
+    await conn.execute('SET NAMES utf8mb4');
     await conn.execute('SET FOREIGN_KEY_CHECKS = 0');
-    const [tables] = await conn.execute("SHOW TABLES LIKE 'users'");
-    if (tables.length > 0) {
-      // We only drop if we detect an old version that might be causing the conflict.
-      // After this run, the schema will be consistent.
-      await conn.execute('DROP TABLE IF EXISTS sales_activities, comments, enquiries, sales_persons, users, app_settings');
-    }
-    await conn.execute('SET FOREIGN_KEY_CHECKS = 1');
 
-    // Create tables with explicit CHARSET and COLLATE to prevent mismatch
+    console.log('🧹 Cleaning existing tables to ensure schema consistency...');
+    await conn.execute('DROP TABLE IF EXISTS sales_activities');
+    await conn.execute('DROP TABLE IF EXISTS comments');
+    await conn.execute('DROP TABLE IF EXISTS enquiries');
+    await conn.execute('DROP TABLE IF EXISTS sales_persons');
+    await conn.execute('DROP TABLE IF EXISTS users');
+    await conn.execute('DROP TABLE IF EXISTS app_settings');
+    
+    // Explicitly define charset and collation for both table and ID columns to avoid any mismatch
+    const colSpec = 'VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
     const tableOptions = 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci';
 
     await conn.execute(`
-      CREATE TABLE IF NOT EXISTS users (
-        id VARCHAR(36) PRIMARY KEY,
+      CREATE TABLE users (
+        id ${colSpec} PRIMARY KEY,
         username VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         full_name VARCHAR(200) NOT NULL,
@@ -68,9 +70,9 @@ async function initializeDatabase() {
     `);
 
     await conn.execute(`
-      CREATE TABLE IF NOT EXISTS sales_persons (
-        id VARCHAR(36) PRIMARY KEY,
-        user_id VARCHAR(36),
+      CREATE TABLE sales_persons (
+        id ${colSpec} PRIMARY KEY,
+        user_id ${colSpec},
         name VARCHAR(200) NOT NULL,
         email VARCHAR(200),
         phone VARCHAR(20),
@@ -79,13 +81,14 @@ async function initializeDatabase() {
         is_available TINYINT(1) DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (user_id),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       ) ${tableOptions}
     `);
 
     await conn.execute(`
-      CREATE TABLE IF NOT EXISTS enquiries (
-        id VARCHAR(36) PRIMARY KEY,
+      CREATE TABLE enquiries (
+        id ${colSpec} PRIMARY KEY,
         customer_name VARCHAR(200) NOT NULL,
         customer_email VARCHAR(200),
         customer_mobile VARCHAR(20) NOT NULL,
@@ -94,22 +97,23 @@ async function initializeDatabase() {
         source VARCHAR(100) DEFAULT 'WEBSITE',
         status VARCHAR(50) DEFAULT 'new',
         interest_level VARCHAR(20) DEFAULT 'cold',
-        assigned_to VARCHAR(36),
+        assigned_to ${colSpec},
         remarks TEXT,
         follow_up_date DATETIME,
         priority INT DEFAULT 2,
         custom_data JSON,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (assigned_to),
         FOREIGN KEY (assigned_to) REFERENCES sales_persons(id) ON DELETE SET NULL
       ) ${tableOptions}
     `);
 
     await conn.execute(`
-      CREATE TABLE IF NOT EXISTS sales_activities (
-        id VARCHAR(36) PRIMARY KEY,
-        enquiry_id VARCHAR(36),
-        sales_person_id VARCHAR(36),
+      CREATE TABLE sales_activities (
+        id ${colSpec} PRIMARY KEY,
+        enquiry_id ${colSpec},
+        sales_person_id ${colSpec},
         activity_type VARCHAR(100) NOT NULL,
         activity_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         notes TEXT,
@@ -117,30 +121,37 @@ async function initializeDatabase() {
         duration INT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (enquiry_id),
+        INDEX (sales_person_id),
         FOREIGN KEY (enquiry_id) REFERENCES enquiries(id) ON DELETE CASCADE,
         FOREIGN KEY (sales_person_id) REFERENCES sales_persons(id) ON DELETE SET NULL
       ) ${tableOptions}
     `);
 
     await conn.execute(`
-      CREATE TABLE IF NOT EXISTS comments (
-        id VARCHAR(36) PRIMARY KEY,
-        enquiry_id VARCHAR(36),
-        user_id VARCHAR(36),
+      CREATE TABLE comments (
+        id ${colSpec} PRIMARY KEY,
+        enquiry_id ${colSpec},
+        user_id ${colSpec},
         comment_text TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX (enquiry_id),
+        INDEX (user_id),
         FOREIGN KEY (enquiry_id) REFERENCES enquiries(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
       ) ${tableOptions}
     `);
 
     await conn.execute(`
-      CREATE TABLE IF NOT EXISTS app_settings (
+      CREATE TABLE app_settings (
         setting_key VARCHAR(100) PRIMARY KEY,
         setting_value JSON NOT NULL,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ${tableOptions}
     `);
+
+    // Re-enable checks
+    await conn.execute('SET FOREIGN_KEY_CHECKS = 1');
 
     // Seed default form config if not exists
     const [config] = await conn.execute("SELECT setting_key FROM app_settings WHERE setting_key = 'form_config'");
