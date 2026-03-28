@@ -547,7 +547,7 @@ const EnquiryTable = ({ enquiries = [] }) => {
                               {comment.commentNumber}
                             </span>
                             <span className="text-xs font-medium text-gray-600">Comment #{comment.commentNumber}</span>
-                            <span className="text-xs text-gray-500">by {comment.user.name}</span>
+                            <span className="text-xs text-gray-500">by {comment.user?.name || comment.userName || comment.user?.username || 'System'}</span>
                           </div>
                           <div className="text-xs text-gray-500">
                             <div className="font-medium">{date}</div>
