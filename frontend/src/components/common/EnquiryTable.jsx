@@ -136,7 +136,7 @@ const EnquiryTable = ({ enquiries = [] }) => {
     if (!newComment.trim()) return;
     
     try {
-      await commentAPI.add(commentModal.enquiryId, user.id, newComment.trim());
+      await commentAPI.add(commentModal.enquiryId, undefined, newComment.trim());
       setNewComment('');
       
       // Reload comments

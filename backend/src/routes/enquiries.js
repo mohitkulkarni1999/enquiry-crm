@@ -324,7 +324,7 @@ router.post('/:id/schedule-follow-up', async (req, res) => {
 router.get('/:id/comments', authenticate, async (req, res) => {
   try {
     const query = `
-      SELECT c.*, u.name as user_name 
+      SELECT c.*, u.full_name as user_name 
       FROM comments c 
       LEFT JOIN users u ON c.user_id = u.id 
       WHERE c.enquiry_id = ? 
