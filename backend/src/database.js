@@ -2,9 +2,9 @@ require('dotenv').config();
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-
 const poolParams = process.env.DATABASE_URL ? {
-  uri: process.env.DATABASE_URL,
+  uri: process.env.DATABASE_URL.replace('?ssl-mode=REQUIRED', ''),
+  ssl: { rejectUnauthorized: false },
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -15,6 +15,7 @@ const poolParams = process.env.DATABASE_URL ? {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASS || 'root',
   database: process.env.DB_NAME || 'enquiry_crm',
+  ssl: process.env.DB_HOST && process.env.DB_HOST.includes('aiven') ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
