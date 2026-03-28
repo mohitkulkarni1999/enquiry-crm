@@ -2,14 +2,23 @@ require('dotenv').config();
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-const poolParams = process.env.DATABASE_URL ? {
-  uri: process.env.DATABASE_URL.replace('?ssl-mode=REQUIRED', ''),
-  ssl: { rejectUnauthorized: false },
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  multipleStatements: true,
-} : {
+let poolParams;
+if (process.env.DATABASE_URL) {
+  const dbUrl = new URL(process.env.DATABASE_URL);
+  poolParams = {
+    host: dbUrl.hostname,
+    port: parseInt(dbUrl.port) || 3306,
+    user: dbUrl.username,
+    password: decodeURIComponent(dbUrl.password),
+    database: dbUrl.pathname.substring(1), // remove leading slash
+    ssl: { rejectUnauthorized: false },
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    multipleStatements: true,
+  };
+} else {
+  poolParams = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || 'root',
@@ -20,7 +29,8 @@ const poolParams = process.env.DATABASE_URL ? {
   connectionLimit: 10,
   queueLimit: 0,
   multipleStatements: true,
-};
+  };
+}
 
 const pool = mysql.createPool(poolParams);
 
@@ -75,6 +85,7 @@ async function initializeDatabase() {
         remarks TEXT,
         follow_up_date DATETIME,
         priority INT DEFAULT 2,
+        custom_data JSON,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (assigned_to) REFERENCES sales_persons(id) ON DELETE SET NULL
@@ -109,6 +120,28 @@ async function initializeDatabase() {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        setting_key VARCHAR(100) PRIMARY KEY,
+        setting_value JSON NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Seed default form config if not exists
+    const [config] = await conn.execute("SELECT setting_key FROM app_settings WHERE setting_key = 'form_config'");
+    if (config.length === 0) {
+      const defaultFormConfig = [
+        { id: 'customerName', type: 'text', label: 'Full Name', required: true, isCore: true },
+        { id: 'customerMobile', type: 'tel', label: 'Mobile Number', required: true, isCore: true },
+        { id: 'customerEmail', type: 'email', label: 'Email Address', required: false, isCore: true },
+        { id: 'propertyType', type: 'select', label: 'Property Type', required: false, options: ['1 BHK', '2 BHK', '3 BHK', 'Villa', 'Commercial'], isCore: true },
+        { id: 'budgetRange', type: 'select', label: 'Budget', required: false, options: ['Under 50L', '50L - 1Cr', '1Cr - 2Cr', 'Above 2Cr'], isCore: true },
+        { id: 'remarks', type: 'textarea', label: 'Remarks / Notes', required: false, isCore: true }
+      ];
+      await conn.execute("INSERT INTO app_settings (setting_key, setting_value) VALUES ('form_config', ?)", [JSON.stringify(defaultFormConfig)]);
+    }
 
     // Seed super admin if not exists
     const [existing] = await conn.execute("SELECT id FROM users WHERE role = 'SUPER_ADMIN' LIMIT 1");
