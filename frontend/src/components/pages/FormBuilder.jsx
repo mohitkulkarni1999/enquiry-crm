@@ -83,7 +83,7 @@ const FormBuilder = () => {
           <p className="text-gray-500 text-sm mt-1">Configure the public enquiry form fields.</p>
         </div>
         <div className="flex space-x-3">
-          <Button onClick={addField} variant="secondary" icon={<ActionIcons.plus size={16} />}>
+          <Button onClick={addField} variant="secondary" icon={<ActionIcons.add size={16} />}>
             Add Custom Field
           </Button>
           <Button onClick={handleSave} disabled={saving} icon={saving ? <ActionIcons.loading size={16} className="animate-spin" /> : <ActionIcons.check size={16} />}>
@@ -166,7 +166,7 @@ const FormBuilder = () => {
             <div className="pt-6">
               {!f.isCore && (
                 <button onClick={() => removeField(i)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                  <ActionIcons.trash size={20} />
+                  <ActionIcons.delete size={20} />
                 </button>
               )}
               {f.isCore && (
