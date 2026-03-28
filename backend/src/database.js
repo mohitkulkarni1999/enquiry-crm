@@ -160,8 +160,9 @@ async function initializeDatabase() {
         { id: 'customerName', type: 'text', label: 'Full Name', required: true, isCore: true },
         { id: 'customerMobile', type: 'tel', label: 'Mobile Number', required: true, isCore: true },
         { id: 'customerEmail', type: 'email', label: 'Email Address', required: false, isCore: true },
-        { id: 'propertyType', type: 'select', label: 'Property Type', required: false, options: ['1 BHK', '2 BHK', '3 BHK', 'Villa', 'Commercial'], isCore: true },
-        { id: 'budgetRange', type: 'select', label: 'Budget', required: false, options: ['Under 50L', '50L - 1Cr', '1Cr - 2Cr', 'Above 2Cr'], isCore: true },
+        { id: 'propertyType', type: 'select', label: 'Property Type', required: false, options: ['1 BHK', '2 BHK', '3 BHK', 'Villa', 'Commercial', 'Studio'], isCore: true },
+        { id: 'budgetRange', type: 'select', label: 'Budget Range', required: false, options: ['Under 50L', '50L - 1Cr', '1Cr - 2Cr', 'Above 2Cr'], isCore: true },
+        { id: 'source', type: 'select', label: 'Enquiry Source', required: false, options: ['Website', 'Walk-in', 'Referral', 'Digital Ad'], isCore: true },
         { id: 'remarks', type: 'textarea', label: 'Remarks / Notes', required: false, isCore: true }
       ];
       await conn.execute("INSERT INTO app_settings (setting_key, setting_value) VALUES ('form_config', ?)", [JSON.stringify(defaultFormConfig)]);

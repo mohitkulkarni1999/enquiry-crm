@@ -1,80 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import SuccessPage from '../common/SuccessPage';
 import { useAppContext } from '../../contexts/AppContext';
-import { enquiryAPI } from '../../utils/api';
+import { settingsAPI, enquiryAPI } from '../../utils/api';
+import { ActionIcons } from '../ui/Icons';
 
 const EnquiryForm = ({ onSuccess }) => {
-  const { createEnquiry, loading } = useAppContext();
+  const { createEnquiry, loading: appLoading } = useAppContext();
+  
+  const [formConfig, setFormConfig] = useState([]);
+  const [loadingConfig, setLoadingConfig] = useState(true);
 
-  const [formData, setFormData] = useState({
-    customerName: '',
-    customerEmail: '',
-    customerMobile: '',
-    propertyType: '',
-    budgetRange: '',
-    source: 'DIGITAL',
-    sourceNote: ''
-  });
-
+  const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
   const [submittedEnquiry, setSubmittedEnquiry] = useState(null);
-  const [followUp, setFollowUp] = useState({ remarks: '', date: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [step, setStep] = useState('mobile'); // 'mobile' | 'form'
+  const [step, setStep] = useState('mobile'); 
   const [existingEnquiry, setExistingEnquiry] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const propertyTypes = [
-    { value: 'STUDIO', label: 'Studio' },
-    { value: 'ONE_BHK', label: '1 BHK' },
-    { value: 'ONE_HALF_BHK', label: '1.5 BHK' },
-    { value: 'TWO_BHK', label: '2 BHK' },
-    { value: 'JODI', label: 'Jodi' } // special handling
-  ];
+  useEffect(() => {
+    fetchConfig();
+  }, []);
 
-  const budgetRanges = [
-    { value: '20_30', label: '20-30l' },
-    { value: '30_40', label: '30-40l' },
-    { value: '40_50', label: '40-50l' },
-    { value: '50_60', label: '50-60l' },
-    { value: '60_ABOVE', label: '60l above' }
-  ];
-
-  const sources = [
-    { value: 'DIGITAL', label: 'Digital' },
-    { value: 'REFERRAL', label: 'Referal' },
-    { value: 'WALKIN', label: 'Walkin' },
-    { value: 'CC', label: 'CC' },
-    { value: 'OTHER', label: 'Other' },
-    { value: 'CP', label: 'CP' }
-  ];
+  const fetchConfig = async () => {
+    try {
+      const config = await settingsAPI.getFormConfig();
+      if (Array.isArray(config) && config.length > 0) {
+        setFormConfig(config);
+        
+        // Initialize form data
+        const initial = {};
+        config.forEach(f => {
+          initial[f.id] = '';
+        });
+        setFormData(initial);
+      }
+    } catch (err) {
+      console.error('Failed to load form config', err);
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.customerName.trim()) {
-      newErrors.customerName = 'Customer name is required';
-    }
+    formConfig.forEach(f => {
+      const val = String(formData[f.id] || '');
+      
+      if (f.required && !val.trim()) {
+        newErrors[f.id] = `${f.label} is required`;
+      }
+      
+      if (f.id === 'customerEmail' && val.trim() && !/\S+@\S+\.\S+/.test(val)) {
+        newErrors[f.id] = 'Email is invalid';
+      }
 
-    if (formData.customerEmail && !/\S+@\S+\.\S+/.test(formData.customerEmail)) {
-      newErrors.customerEmail = 'Email is invalid';
-    }
-
-    if (!formData.customerMobile.trim()) {
-      newErrors.customerMobile = 'Mobile number is required';
-    } else if (!/^[0-9]{10}$/.test(formData.customerMobile.replace(/\D/g, ''))) {
-      newErrors.customerMobile = 'Mobile number must be 10 digits';
-    }
-
-    if (!formData.propertyType) {
-      newErrors.propertyType = 'Property type is required';
-    }
-
-    if (!formData.budgetRange) {
-      newErrors.budgetRange = 'Budget range is required';
-    }
+      if (f.id === 'customerMobile') {
+        if (f.required && !val.trim()) {
+          newErrors[f.id] = 'Mobile number is required';
+        } else if (val.trim() && !/^[0-9]{10}$/.test(val.replace(/\D/g, ''))) {
+          newErrors[f.id] = 'Mobile number must be 10 digits';
+        }
+      }
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -82,38 +72,37 @@ const EnquiryForm = ({ onSuccess }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'priority' ? parseInt(value) : value
-    }));
-
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const normalizeMobile = (value) => (value || '').replace(/\D/g, '');
 
   const prefillFromEnquiry = (e) => {
     if (!e) return;
-    setFormData(prev => ({
-      ...prev,
-      customerName: e.customerName || '',
-      customerEmail: e.customerEmail || '',
-      customerMobile: e.customerMobile || e.customerPhone || prev.customerMobile,
-      propertyType: e.propertyType || '',
-      budgetRange: e.budgetRange || '',
-      source: e.source || 'DIGITAL',
-      sourceNote: ''
-    }));
+    const initial = { ...formData };
+    
+    // Fill core fields
+    if (initial.customerName !== undefined) initial.customerName = e.customerName || '';
+    if (initial.customerEmail !== undefined) initial.customerEmail = e.customerEmail || '';
+    if (initial.customerMobile !== undefined) initial.customerMobile = e.customerMobile || e.customerPhone || initial.customerMobile;
+    if (initial.propertyType !== undefined) initial.propertyType = e.propertyType || '';
+    if (initial.budgetRange !== undefined) initial.budgetRange = e.budgetRange || '';
+    if (initial.source !== undefined) initial.source = e.source || '';
+    if (initial.remarks !== undefined) initial.remarks = e.remarks || '';
+    
+    // Fill custom fields
+    if (e.customData) {
+      Object.keys(e.customData).forEach(k => {
+        if (initial[k] !== undefined) initial[k] = e.customData[k];
+      });
+    }
+    
+    setFormData(initial);
   };
 
   const handleMobileContinue = async () => {
-    const mobile = normalizeMobile(formData.customerMobile);
+    const mobile = normalizeMobile(formData.customerMobile || '');
     if (!/^\d{10}$/.test(mobile)) {
       setErrors(prev => ({ ...prev, customerMobile: 'Enter valid 10-digit mobile number' }));
       return;
@@ -139,134 +128,104 @@ const EnquiryForm = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
-
+    
     try {
-      // Clean mobile number to only digits
-      const cleanMobile = formData.customerMobile.replace(/\D/g, '');
-
-      // Map UI selections to backend enums/fields
-      let mappedPropertyType = formData.propertyType;
-      let mappedBudget = formData.budgetRange;
-      let mappedSource = formData.source;
-      let remarks = '';
-
-      // property type mapping (JODI -> remarks, don't set enum)
-      if (mappedPropertyType === 'JODI') {
-        mappedPropertyType = null;
-        remarks += 'Property Type: JODI. ';
-      }
-
-      // budget mapping
-      const budgetMap = {
-        '20_30': 'TWENTY_TO_30L',
-        '30_40': 'THIRTY_TO_50L',
-        '40_50': 'THIRTY_TO_50L',
-        '50_60': 'FIFTY_TO_75L',
-        '60_ABOVE': 'FIFTY_TO_75L'
-      };
-      mappedBudget = budgetMap[mappedBudget] || null;
-
-      // source mapping to backend LeadSource
-      const sourceMap = {
-        'DIGITAL': 'ADVERTISEMENT',
-        'REFERRAL': 'REFERRAL',
-        'WALKIN': 'WALK_IN',
-        'CC': 'ADVERTISEMENT',
-        'OTHER': 'WEBSITE',
-        'CP': 'ADVERTISEMENT'
-      };
-      const backendSource = sourceMap[mappedSource] || 'WEBSITE';
-
-      if (['CP', 'REFERRAL', 'OTHER'].includes(formData.source) && formData.sourceNote?.trim()) {
-        remarks += `Source Note: ${formData.sourceNote.trim()}`;
-      }
-
-      const enquiryData = {
-        customerName: formData.customerName.trim(),
-        customerEmail: formData.customerEmail?.trim() || null,
-        customerMobile: cleanMobile,
-        propertyType: mappedPropertyType,
-        budgetRange: mappedBudget,
-        source: backendSource,
-        remarks: remarks || null
-        // Don't send status - let backend set default
+      // Split into core fields and customData
+      const payload = {
+        customData: {}
       };
 
-      console.log('Sending enquiry data:', enquiryData);
-      const newEnquiry = await createEnquiry(enquiryData);
-      setSubmittedEnquiry(newEnquiry);
-
-      // Reset form
-      setFormData({
-        customerName: '',
-        customerEmail: '',
-        customerMobile: '',
-        propertyType: '',
-        budgetRange: '',
-        source: 'DIGITAL',
-        sourceNote: ''
+      formConfig.forEach(f => {
+        if (f.isCore) {
+          if (f.id === 'customerMobile') {
+            payload[f.id] = (formData[f.id] || '').replace(/\D/g, '');
+          } else {
+            payload[f.id] = formData[f.id];
+          }
+        } else {
+          payload.customData[f.id] = formData[f.id];
+        }
       });
 
-      alert(`Enquiry submitted successfully! Reference ID: ${newEnquiry.id}`);
-
-      if (onSuccess) {
-        onSuccess(newEnquiry);
+      // Default source if not provided in dynamic form
+      if (!payload.source) {
+        payload.source = "WEBSITE";
       }
+
+      const newEnquiry = await createEnquiry(payload);
+      setSubmittedEnquiry(newEnquiry);
+
+      // Reset
+      const resetForm = {};
+      formConfig.forEach(f => resetForm[f.id] = '');
+      setFormData(resetForm);
+
+      alert(`Enquiry submitted successfully! Reference ID: ${newEnquiry.id}`);
+      if (onSuccess) onSuccess(newEnquiry);
     } catch (error) {
-      console.error('Error submitting enquiry:', error);
       alert(`Failed to submit enquiry: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (loadingConfig) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <ActionIcons.loading size={48} className="animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  // Find mobile field for the first step
+  const mobileField = formConfig.find(f => f.id === 'customerMobile');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-4 sm:py-8 lg:py-12 px-2 sm:px-4 lg:px-6">
-      <div className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto">
-        <Card>
-          <div className="text-center mb-4 sm:mb-6 lg:mb-8">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
+      <div className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto">
+        <Card className="p-8 shadow-2xl rounded-3xl border-0">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
               Enquiry Form
             </h1>
-            <p className="text-xs sm:text-sm lg:text-base text-gray-600 px-2">
+            <p className="text-gray-500">
               Please fill out the form below to submit your enquiry
             </p>
           </div>
-
-          {!submittedEnquiry && step === 'mobile' && (
+          
+          {!submittedEnquiry && step === 'mobile' && mobileField && (
             <div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mobile Number *
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {mobileField.label} *
                 </label>
                 <input
                   type="tel"
                   name="customerMobile"
-                  value={formData.customerMobile}
+                  value={formData.customerMobile || ''}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.customerMobile ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-4 py-3 rounded-xl border bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.customerMobile ? 'border-red-500' : 'border-gray-200'
+                  }`}
                   placeholder="Enter 10-digit mobile number"
                   pattern="[0-9]{10}"
                   required
                 />
                 {errors.customerMobile && (
-                  <p className="mt-1 text-sm text-red-600">{errors.customerMobile}</p>
+                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <ActionIcons.close size={14} /> {errors.customerMobile}
+                  </p>
                 )}
               </div>
-              <div className="pt-4">
+              <div className="pt-8">
                 <Button
                   type="button"
                   variant="primary"
-                  className="w-full"
-                  size="lg"
-                  disabled={loading}
+                  className="w-full py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30"
+                  disabled={appLoading}
                   onClick={handleMobileContinue}
                 >
                   Continue
@@ -276,232 +235,142 @@ const EnquiryForm = ({ onSuccess }) => {
           )}
 
           {!submittedEnquiry && step === 'form' && (
-            <form onSubmit={handleSubmit}>
-              {existingEnquiry && (
-                <div className="flex items-start justify-between p-3 sm:p-4 mb-4 rounded-md border bg-amber-50 border-amber-200">
-                  <div className="text-xs sm:text-sm text-amber-800">
-                    Existing record found for this mobile. Review and submit, or click Edit.
-                  </div>
-                  {!isEditMode && (
-                    <Button type="button" variant="secondary" onClick={() => setIsEditMode(true)}>
-                      Edit form
-                    </Button>
-                  )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {existingEnquiry && (
+              <div className="flex items-start justify-between p-4 mb-4 rounded-xl border bg-amber-50 border-amber-200">
+                <div className="text-sm text-amber-800 font-medium pt-1">
+                  Existing record found. Review and submit, or click Edit.
                 </div>
-              )}
-              {/* Customer Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Customer Name *
-                </label>
-                <input
-                  type="text"
-                  name="customerName"
-                  value={formData.customerName}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.customerName ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Enter customer name"
-                  required
-                  disabled={!!existingEnquiry && !isEditMode}
-                />
-                {errors.customerName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.customerName}</p>
+                {!isEditMode && (
+                  <Button type="button" variant="secondary" size="sm" onClick={() => setIsEditMode(true)}>
+                    Edit
+                  </Button>
                 )}
               </div>
-
-              {/* Customer Email (optional) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address (optional)
-                </label>
-                <input
-                  type="email"
-                  name="customerEmail"
-                  value={formData.customerEmail}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.customerEmail ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Enter email address"
-                  disabled={!!existingEnquiry && !isEditMode}
-                />
-                {errors.customerEmail && (
-                  <p className="mt-1 text-sm text-red-600">{errors.customerEmail}</p>
-                )}
-              </div>
-
-              {/* Customer Mobile */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mobile Number *
-                </label>
-                <input
-                  type="tel"
-                  name="customerMobile"
-                  value={formData.customerMobile}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.customerMobile ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Enter 10-digit mobile number"
-                  pattern="[0-9]{10}"
-                  required
-                  disabled={!!existingEnquiry && !isEditMode}
-                />
-                {errors.customerMobile && (
-                  <p className="mt-1 text-sm text-red-600">{errors.customerMobile}</p>
-                )}
-              </div>
-
-              {/* Property Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Property Type *
-                </label>
-                <select
-                  name="propertyType"
-                  value={formData.propertyType}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.propertyType ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  required
-                  disabled={!!existingEnquiry && !isEditMode}
-                >
-                  <option value="">Select property type</option>
-                  {propertyTypes.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
-                {errors.propertyType && (
-                  <p className="mt-1 text-sm text-red-600">{errors.propertyType}</p>
-                )}
-              </div>
-
-              {/* Budget Range */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Budget Range *
-                </label>
-                <select
-                  name="budgetRange"
-                  value={formData.budgetRange}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.budgetRange ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  required
-                  disabled={!!existingEnquiry && !isEditMode}
-                >
-                  <option value="">Select budget range</option>
-                  {budgetRanges.map(range => (
-                    <option key={range.value} value={range.value}>{range.label}</option>
-                  ))}
-                </select>
-                {errors.budgetRange && (
-                  <p className="mt-1 text-sm text-red-600">{errors.budgetRange}</p>
-                )}
-              </div>
-
-              {/* Removed: Location Preference, Requirements, Priority */}
-
-              {/* Source with conditional note for CP/Referal/Other */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Source
-                </label>
-                <select
-                  name="source"
-                  value={formData.source}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={!!existingEnquiry && !isEditMode}
-                >
-                  {sources.map(source => (
-                    <option key={source.value} value={source.value}>
-                      {source.label}
-                    </option>
-                  ))}
-                </select>
-                {(formData.source === 'CP' || formData.source === 'REFERRAL' || formData.source === 'OTHER') && (
-                  <div className="mt-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Note
+            )}
+            
+            {formConfig.map(f => {
+              if (f.id === 'customerMobile') {
+                return (
+                  <div key={f.id}>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      {f.label} {f.required && '*'}
                     </label>
-                    <textarea
-                      name="sourceNote"
-                      value={formData.sourceNote}
+                    <input
+                      type="tel"
+                      name={f.id}
+                      value={formData[f.id] || ''}
                       onChange={handleInputChange}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Add details for selected source"
+                      className={`w-full px-4 py-3 rounded-xl border bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors[f.id] ? 'border-red-500' : 'border-gray-200'
+                      }`}
+                      placeholder={`Enter ${f.label.toLowerCase()}`}
+                      required={f.required}
                       disabled={!!existingEnquiry && !isEditMode}
                     />
+                    {errors[f.id] && <p className="mt-1 text-sm text-red-600">{errors[f.id]}</p>}
                   </div>
-                )}
-              </div>
+                );
+              }
 
-              {/* Submit Button */}
-              <div className="pt-4">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="w-full"
-                  size="lg"
-                  disabled={isSubmitting || loading || (!!existingEnquiry && !isEditMode)}
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Enquiry'}
-                </Button>
-              </div>
-            </form>
+              if (f.type === 'textarea') {
+                return (
+                  <div key={f.id}>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      {f.label} {f.required && '*'}
+                    </label>
+                    <textarea
+                      name={f.id}
+                      value={formData[f.id] || ''}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className={`w-full px-4 py-3 rounded-xl border bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors[f.id] ? 'border-red-500' : 'border-gray-200'
+                      }`}
+                      placeholder={`Enter ${f.label.toLowerCase()}`}
+                      required={f.required}
+                      disabled={!!existingEnquiry && !isEditMode}
+                    />
+                    {errors[f.id] && <p className="mt-1 text-sm text-red-600">{errors[f.id]}</p>}
+                  </div>
+                );
+              }
+
+              if (f.type === 'select') {
+                return (
+                  <div key={f.id}>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      {f.label} {f.required && '*'}
+                    </label>
+                    <select
+                      name={f.id}
+                      value={formData[f.id] || ''}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 rounded-xl border bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors[f.id] ? 'border-red-500' : 'border-gray-200'
+                      }`}
+                      required={f.required}
+                      disabled={!!existingEnquiry && !isEditMode}
+                    >
+                      <option value="">Select {f.label}</option>
+                      {(f.options || []).map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                    {errors[f.id] && <p className="mt-1 text-sm text-red-600">{errors[f.id]}</p>}
+                  </div>
+                );
+              }
+
+              // Default text/email/number input
+              return (
+                <div key={f.id}>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {f.label} {f.required && '*'}
+                  </label>
+                  <input
+                    type={f.type || 'text'}
+                    name={f.id}
+                    value={formData[f.id] || ''}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 rounded-xl border bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors[f.id] ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                    placeholder={`Enter ${f.label.toLowerCase()}`}
+                    required={f.required}
+                    disabled={!!existingEnquiry && !isEditMode}
+                  />
+                  {errors[f.id] && <p className="mt-1 text-sm text-red-600">{errors[f.id]}</p>}
+                </div>
+              );
+            })}
+
+            <div className="pt-6">
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30"
+                disabled={isSubmitting || appLoading || (!!existingEnquiry && !isEditMode)}
+                icon={isSubmitting ? <ActionIcons.loading size={20} className="animate-spin" /> : null}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Enquiry'}
+              </Button>
+            </div>
+          </form>
           )}
 
           {submittedEnquiry && (
-            <div className="space-y-4">
-              <div className="p-4 bg-green-50 border border-green-200 rounded-md text-green-800 text-sm">
-                Your enquiry has been submitted. Reference ID: <b>{submittedEnquiry.id}</b>
+            <div className="text-center py-8">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ActionIcons.check size={40} className="text-green-500" />
               </div>
-              <div className="p-4 bg-white border rounded-md">
-                <div className="text-sm font-medium text-gray-700 mb-2">Schedule a follow-up</div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <input
-                    type="date"
-                    value={followUp.date}
-                    onChange={(e) => setFollowUp(prev => ({ ...prev, date: e.target.value }))}
-                    className="px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Remarks (optional)"
-                    value={followUp.remarks}
-                    onChange={(e) => setFollowUp(prev => ({ ...prev, remarks: e.target.value }))}
-                    className="px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  <Button
-                    type="button"
-                    variant="primary"
-                    onClick={async () => {
-                      try {
-                        if (followUp.remarks.trim()) {
-                          await fetch(`/api/v1/enquiries/${submittedEnquiry.id}/remarks`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain' },
-                            body: followUp.remarks.trim()
-                          });
-                        }
-                        if (followUp.date) {
-                          const iso = new Date(followUp.date).toISOString();
-                          await fetch(`/api/v1/enquiries/${submittedEnquiry.id}/schedule-follow-up?followUpDate=${encodeURIComponent(iso)}`, {
-                            method: 'POST'
-                          });
-                        }
-                        alert('Follow-up saved');
-                      } catch (e) {
-                        alert('Failed to save follow-up');
-                      }
-                    }}
-                  >
-                    Save Follow-up
-                  </Button>
-                </div>
-              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Enquiry Submitted!</h2>
+              <p className="text-gray-500 mb-6">
+                Your enquiry reference ID is <span className="font-bold text-gray-900">#{submittedEnquiry.id.substring(0,8)}</span>
+              </p>
+              <Button onClick={() => window.location.reload()} variant="outline">
+                Submit Another
+              </Button>
             </div>
           )}
         </Card>
