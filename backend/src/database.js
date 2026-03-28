@@ -41,20 +41,16 @@ async function initializeDatabase() {
     await conn.execute('SET NAMES utf8mb4');
     await conn.execute('SET FOREIGN_KEY_CHECKS = 0');
 
-    console.log('🧹 Cleaning existing tables to ensure schema consistency...');
-    await conn.execute('DROP TABLE IF EXISTS sales_activities');
-    await conn.execute('DROP TABLE IF EXISTS comments');
-    await conn.execute('DROP TABLE IF EXISTS enquiries');
-    await conn.execute('DROP TABLE IF EXISTS sales_persons');
-    await conn.execute('DROP TABLE IF EXISTS users');
-    await conn.execute('DROP TABLE IF EXISTS app_settings');
+    console.log('📦 Verifying database schema...');
+    // We remove the DROP TABLE commands to speed up startup and prevent data loss.
+    // We now use CREATE TABLE IF NOT EXISTS instead.
     
     // Explicitly define charset and collation for both table and ID columns to avoid any mismatch
     const colSpec = 'VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
     const tableOptions = 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci';
 
     await conn.execute(`
-      CREATE TABLE users (
+      CREATE TABLE IF NOT EXISTS users (
         id ${colSpec} PRIMARY KEY,
         username VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
@@ -70,7 +66,7 @@ async function initializeDatabase() {
     `);
 
     await conn.execute(`
-      CREATE TABLE sales_persons (
+      CREATE TABLE IF NOT EXISTS sales_persons (
         id ${colSpec} PRIMARY KEY,
         user_id ${colSpec},
         name VARCHAR(200) NOT NULL,
@@ -87,7 +83,7 @@ async function initializeDatabase() {
     `);
 
     await conn.execute(`
-      CREATE TABLE enquiries (
+      CREATE TABLE IF NOT EXISTS enquiries (
         id ${colSpec} PRIMARY KEY,
         customer_name VARCHAR(200) NOT NULL,
         customer_email VARCHAR(200),
@@ -110,7 +106,7 @@ async function initializeDatabase() {
     `);
 
     await conn.execute(`
-      CREATE TABLE sales_activities (
+      CREATE TABLE IF NOT EXISTS sales_activities (
         id ${colSpec} PRIMARY KEY,
         enquiry_id ${colSpec},
         sales_person_id ${colSpec},
@@ -129,7 +125,7 @@ async function initializeDatabase() {
     `);
 
     await conn.execute(`
-      CREATE TABLE comments (
+      CREATE TABLE IF NOT EXISTS comments (
         id ${colSpec} PRIMARY KEY,
         enquiry_id ${colSpec},
         user_id ${colSpec},
@@ -143,7 +139,7 @@ async function initializeDatabase() {
     `);
 
     await conn.execute(`
-      CREATE TABLE app_settings (
+      CREATE TABLE IF NOT EXISTS app_settings (
         setting_key VARCHAR(100) PRIMARY KEY,
         setting_value JSON NOT NULL,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

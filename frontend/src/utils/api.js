@@ -21,7 +21,7 @@ async function fetchAPI(endpoint, options = {}) {
     },
   };
 
-  const token = authTokenProvider?.();
+  const token = (authTokenProvider && authTokenProvider()) || localStorage.getItem('auth:token');
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
